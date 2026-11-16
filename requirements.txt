@@ -1,0 +1,18 @@
+# Data and SQL
+pandas
+numpy
+sqlalchemy
+psycopg2-binary
+
+# Modelling
+scikit-learn
+xgboost
+joblib
+
+# Exploration and plots
+jupyterlab
+matplotlib
+seaborn
+
+# Web app
+streamlit

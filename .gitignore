@@ -1,0 +1,21 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Data: rebuilt from the scripts, too large to commit
+data/*
+!data/.gitkeep
+*.db
+*.sqlite
+
+# Secrets: never commit database passwords
+.env
+.streamlit/secrets.toml
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
