@@ -109,12 +109,42 @@ The diabetes rate rises steadily with the number of cardiovascular conditions
 | 3 | 15,217 | 36.4% |
 | 4 | 2,483 | 47.4% |
 
+## Analysis in SQL
+
+[`sql/03_analysis.sql`](sql/03_analysis.sql) holds eight queries, and
+[`docs/analysis_results.md`](docs/analysis_results.md) holds their full output.
+
+| Query | Question | SQL technique |
+|---|---|---|
+| Q1 | What does the population look like overall? | Aggregate functions |
+| Q2 | How does the diabetes rate differ by age and sex? | Conditional aggregation (pivot) |
+| Q3 | How much does risk rise with BMI, relative to a healthy weight? | CTEs with a baseline |
+| Q4 | How does the rate change from one age group to the next? | `LAG` and a running `SUM` |
+| Q5 | Which yes/no factors matter most? | `UNION ALL` and odds ratios |
+| Q6 | How do income and education combine? | Joins, `HAVING`, `RANK` |
+| Q7 | Which BMI category is riskiest within each age band? | `ROW_NUMBER` with `PARTITION BY` |
+| Q8 | How concentrated is diabetes among people with heart conditions? | Running totals |
+
+Key findings:
+
+- **Blood pressure is the strongest single factor.** People with high blood pressure have
+  5 times the odds of diabetes (24.4% against 6.0%).
+- **Risk climbs with every BMI category.** Compared with a healthy weight, the rate is 2 times
+  higher when overweight and 5.9 times higher in obese class III.
+- **Cases are concentrated.** The 29.5% of people with two or more cardiovascular conditions
+  account for 61.7% of all diabetes cases.
+- **Income and education compound.** The rate is 32.0% for low-income respondents who left
+  school by grade 8, and 7.9% for high-income college graduates.
+- **The gap between men and women widens with age,** from under 1 point below 50 to 4.9 points at 65 and over.
+
+These are associations in survey data, not causes.
+
 ## Repository layout
 
 | Folder       | Contents                                                   |
 |--------------|------------------------------------------------------------|
 | `data/`      | Raw CSV and the SQLite database (not committed)            |
-| `docs/`      | Data dictionary                                            |
+| `docs/`      | Data dictionary and analysis results                       |
 | `sql/`       | Schema, feature-engineering views and analysis queries     |
 | `notebooks/` | Exploration and model evaluation notebooks                 |
 | `src/`       | Python scripts: load the database, train the model         |
@@ -129,6 +159,7 @@ py -m venv .venv
 pip install -r requirements.txt
 python src/download_data.py
 python src/build_database.py
+python src/run_analysis.py
 ```
 
 ## Progress
@@ -137,7 +168,7 @@ python src/build_database.py
 - [x] Step 2 - data download and exploration ([notebook](notebooks/01_data_exploration.ipynb), [data dictionary](docs/data_dictionary.md))
 - [x] Step 3 - database schema and load ([schema](sql/01_schema.sql), [build script](src/build_database.py))
 - [x] Step 4 - feature engineering in SQL ([views](sql/02_views.sql))
-- [ ] Step 5 - analysis queries
+- [x] Step 5 - analysis queries ([queries](sql/03_analysis.sql), [results](docs/analysis_results.md))
 - [ ] Step 6 - model training
 - [ ] Step 7 - Streamlit app
 - [ ] Step 8 - prediction logging
