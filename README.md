@@ -217,6 +217,27 @@ streamlit run app/app.py
 python -m pytest
 ```
 
+### Prediction logging
+
+The app writes back to SQL. When a visitor ticks the consent box, their answers and
+result are inserted into a `user_predictions` table in PostgreSQL, defined in
+[`sql/04_user_predictions.sql`](sql/04_user_predictions.sql). A "Usage" tab reads the
+table back with a `GROUP BY` query and shows totals only.
+
+Privacy choices:
+
+- **Opt-in.** The consent box is never pre-ticked, and nothing is stored without it.
+- **Minimal.** Only the 15 model inputs and the result are stored. There is no name,
+  IP address or session ID, and age is kept as a five-year band, not an exact age.
+  Height and weight are not stored, only the BMI worked out from them.
+- **Fail-safe.** If the database is unreachable the visitor still gets their result.
+
+With no database configured, the app logs to a local SQLite file, so it runs on any
+machine with no setup. To use a hosted database, copy
+[`.streamlit/secrets.toml.example`](.streamlit/secrets.toml.example) to
+`.streamlit/secrets.toml`, paste in the connection string, and run
+`python src/setup_prediction_db.py` to create the table.
+
 ## Repository layout
 
 | Folder       | Contents                                                   |
@@ -251,5 +272,5 @@ python src/train_model.py
 - [x] Step 5 - analysis queries ([queries](sql/03_analysis.sql), [results](docs/analysis_results.md))
 - [x] Step 6 - model training ([script](src/train_model.py), [model details](models/model_info.json))
 - [x] Step 7 - Streamlit app ([app](app/app.py), [tests](tests/))
-- [ ] Step 8 - prediction logging
+- [x] Step 8 - prediction logging ([table](sql/04_user_predictions.sql), [logging code](app/prediction_log.py))
 - [ ] Step 9 - deployment

@@ -10,6 +10,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
+from prediction_log import database_url, log_prediction, make_engine, usage_summary
 from risk_model import (
     GENERAL_HEALTH,
     age_to_group,
@@ -34,6 +35,16 @@ st.set_page_config(page_title="Diabetes Risk Estimator", page_icon="🩺", layou
 @st.cache_resource
 def get_model():
     return load_model()
+
+
+@st.cache_resource
+def get_log_engine():
+    """Connect to the prediction log: hosted PostgreSQL if configured, local SQLite if not."""
+    try:
+        secret = st.secrets.get("DATABASE_URL")
+    except Exception:  # no secrets file at all
+        secret = None
+    return make_engine(database_url(secret))
 
 
 def yes_no(label: str, key: str, help: str | None = None) -> int | None:
@@ -79,6 +90,12 @@ def input_form() -> dict | None:
         with col2:
             smoker = yes_no("Smoked 100+ cigarettes in your life?", "smoker", "That is about 5 packs in total.")
 
+        consent = st.checkbox(
+            "Save my answers anonymously to help improve this project (optional)",
+            value=False, key="consent",
+            help="Stores only the answers above and your result. No name, IP address, exact age, "
+                 "height or weight is saved.",
+        )
         submitted = st.form_submit_button("Estimate my risk", type="primary", width="stretch")
 
     if not submitted:
@@ -105,6 +122,7 @@ def input_form() -> dict | None:
         "eats_fruit_daily": fruit,
         "eats_veg_daily": veg,
         "is_smoker": smoker,
+        "consent": bool(consent),
     }
 
 
@@ -176,10 +194,55 @@ def show_result(answers: dict, pipeline, info: dict) -> None:
     if bmi > info["bmi_cap"]:
         st.caption(f"BMI values above {info['bmi_cap']} are treated as {info['bmi_cap']} by the model.")
 
+    if answers["consent"]:
+        # Logging must never break the result the visitor came for
+        try:
+            log_prediction(get_log_engine(), answers, result.probability, result.level, info["trained_on"])
+            get_usage.clear()
+            st.caption("✓ Your answers were saved anonymously. Thank you.")
+        except Exception:
+            st.caption("Your answers could not be saved this time. Your result is not affected.")
+
     st.info(
         "This estimate describes patterns in survey data. It cannot tell you whether you have "
         "diabetes. If you are concerned, speak to a doctor, who can arrange a blood test."
     )
+
+
+@st.cache_data(ttl=60)
+def get_usage() -> pd.DataFrame:
+    return usage_summary(get_log_engine())
+
+
+def usage_tab() -> None:
+    st.subheader("How the tool is being used")
+    st.write(
+        "When a visitor ticks the consent box, their answers and result are written to a "
+        "PostgreSQL table. This page reads that table back with a SQL `GROUP BY` query. "
+        "Only totals are shown, never individual answers."
+    )
+    try:
+        usage = get_usage()
+    except Exception:
+        st.caption("Usage figures are unavailable right now.")
+        return
+    if usage.empty:
+        st.caption("No predictions have been saved yet.")
+        return
+
+    total = int(usage["predictions"].sum())
+    average = (usage["predictions"] * usage["avg_predicted_pct"]).sum() / total
+    col1, col2 = st.columns(2)
+    col1.metric("Predictions saved", f"{total:,}")
+    col2.metric("Average estimated risk", f"{average:.0f}%", help="Among saved predictions. The survey average is 14%.")
+    st.dataframe(
+        usage.rename(columns={
+            "risk_level": "Risk level", "predictions": "Predictions",
+            "avg_predicted_pct": "Average estimated risk (%)",
+        }),
+        hide_index=True, width="stretch",
+    )
+    st.caption("People who choose to use a risk tool are not a random sample, so these figures will differ from the survey.")
 
 
 def about_tab(info: dict) -> None:
@@ -235,13 +298,15 @@ def main() -> None:
     )
     st.write("Answer a few questions to see how your risk compares with 250,000 survey respondents.")
 
-    estimate, about = st.tabs(["Estimate my risk", "About the model"])
+    estimate, about, usage = st.tabs(["Estimate my risk", "About the model", "Usage"])
     with estimate:
         answers = input_form()
         if answers:
             show_result(answers, pipeline, info)
     with about:
         about_tab(info)
+    with usage:
+        usage_tab()
 
 
 main()
