@@ -1,0 +1,13 @@
+# Everything needed to rebuild the project from the raw data.
+-r requirements.txt
+
+# Modelling
+xgboost==3.4.1
+
+# Exploration and plots
+jupyterlab==4.6.6
+matplotlib==3.11.2
+seaborn==0.13.2
+
+# Tests
+pytest==9.2.0

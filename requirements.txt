@@ -1,21 +1,15 @@
-# Data and SQL
-pandas
-numpy
-sqlalchemy
-psycopg2-binary
+# Packages the deployed web app needs. Versions are pinned so the hosted app
+# matches the environment the model was trained and saved in: a saved
+# scikit-learn model should be loaded by the same scikit-learn version.
+#
+# To work on the whole project (database build, analysis, training, tests):
+#     pip install -r requirements-dev.txt
 
-# Modelling
-scikit-learn
-xgboost
-joblib
-
-# Exploration and plots
-jupyterlab
-matplotlib
-seaborn
-
-# Web app
-streamlit
-
-# Tests
-pytest
+streamlit==1.67.0
+altair==6.3.0
+pandas==3.1.1
+numpy==2.5.5
+scikit-learn==1.9.1
+joblib==1.6.0
+SQLAlchemy==2.1.9
+psycopg2-binary==2.9.13

@@ -1,19 +1,53 @@
 # Type 2 Diabetes Risk Predictor
 
-A web app that estimates a person's risk of type 2 diabetes from self-reported
-health and lifestyle information, built on a SQL data layer.
+A web app that estimates a person's risk of type 2 diabetes from 15 questions about
+their health and lifestyle. The data lives in a SQL database, the model's features are
+built with SQL views, and the app writes its predictions back to SQL.
+
+<!-- LIVE_DEMO_LINK -->
 
 > **Disclaimer:** This is an educational portfolio project. It is not a medical
 > device and is not a substitute for professional medical advice.
 
-**Status:** work in progress.
+## At a glance
 
-## Planned architecture
+| | |
+|---|---|
+| **Data** | CDC Diabetes Health Indicators (BRFSS 2015): 253,680 US adults, 21 survey questions |
+| **SQL** | Normalised SQLite schema with constraints, 4 feature views, 8 analysis queries, a PostgreSQL logging table |
+| **Model** | Logistic regression, ROC-AUC 0.818 on 50,736 held-out people, with calibrated probabilities |
+| **App** | Streamlit: risk level, probability, and a chart explaining each person's result |
+| **Tests** | 28 automated tests covering the prediction logic, the logging and the app itself |
 
-1. **Data** - CDC Diabetes Health Indicators dataset (BRFSS 2015, ~253,000 survey responses).
-2. **SQL layer** - normalised SQLite database, feature engineering in SQL views, analysis queries.
-3. **Model** - logistic regression (baseline) compared with XGBoost; evaluated on ROC-AUC, precision-recall and calibration.
-4. **Web app** - Streamlit form that returns a risk level and logs anonymous predictions to PostgreSQL.
+Three decisions shaped the project:
+
+1. **Calibration over class balancing.** Reweighting the classes would have made the app
+   tell the average person their risk was 39% when the truth is 14%.
+2. **A misleading feature was removed.** Heavy drinkers report less diabetes in the survey,
+   so the model was lowering the risk it showed them. Dropping the feature cost 0.001 ROC-AUC.
+3. **Interpretability over a small accuracy gain.** XGBoost scored 0.01 higher, but a
+   logistic regression lets the app show each person which answers drive their result.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    csv[CDC survey CSV] --> load[build_database.py]
+    load --> db[(SQLite<br>6 tables)]
+    db --> views[SQL views<br>training_features]
+    db --> analysis[SQL analysis<br>8 queries]
+    views --> train[train_model.py]
+    train --> model[pipeline.joblib]
+    model --> app[Streamlit app]
+    app -->|opt-in INSERT| pg[(PostgreSQL<br>user_predictions)]
+    pg -->|GROUP BY| app
+```
+
+1. **Load.** The raw CSV is split into normalised tables and validated against the original.
+2. **Engineer.** SQL views build the features, so the model reads one `SELECT`.
+3. **Analyse.** Eight queries explore the data using CTEs and window functions.
+4. **Model.** A logistic regression is trained, evaluated and saved.
+5. **Serve.** The app loads the saved model, and logs predictions to PostgreSQL with consent.
 
 ## Database schema
 
@@ -212,11 +246,6 @@ No answer is pre-selected for the yes/no questions, so the app never assumes one
 prediction logic lives in [`app/risk_model.py`](app/risk_model.py), separate from the
 interface, and is covered by tests.
 
-```bash
-streamlit run app/app.py
-python -m pytest
-```
-
 ### Prediction logging
 
 The app writes back to SQL. When a visitor ticks the consent box, their answers and
@@ -238,39 +267,73 @@ machine with no setup. To use a hosted database, copy
 `.streamlit/secrets.toml`, paste in the connection string, and run
 `python src/setup_prediction_db.py` to create the table.
 
-## Repository layout
+## Limitations
 
-| Folder       | Contents                                                   |
-|--------------|------------------------------------------------------------|
-| `data/`      | Raw CSV and the SQLite database (not committed)            |
-| `docs/`      | Data dictionary, analysis results and model figures        |
-| `sql/`       | Schema, feature-engineering views and analysis queries     |
-| `notebooks/` | Data exploration notebook                                  |
-| `src/`       | Python scripts: load the database, train the model         |
-| `models/`    | Saved model pipeline (`.joblib`) and its metrics           |
-| `app/`       | Streamlit web app                                          |
-| `tests/`     | Tests for the prediction logic and the app                 |
+- **The data is self-reported, from 2015, and covers US adults only.** Nobody's blood
+  sugar was measured.
+- **The target is broad.** The survey records prediabetes and diabetes together and does
+  not separate type 1 from type 2. Most adult cases are type 2.
+- **Associations, not causes.** The model describes who reports diabetes. It cannot say
+  that changing a behaviour would change someone's risk.
+- **Missing risk factors.** Family history, ethnicity and blood test results are not in the
+  data, and doctors rely on all three.
+- **Not clinically validated.** The risk levels are cut-offs chosen for this project, not
+  a medical standard.
 
-## Setup
+## Run it yourself
+
+Built and tested with Python 3.14. The commands below are for Windows; on macOS or Linux,
+activate the environment with `source .venv/bin/activate`.
 
 ```bash
 py -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
+```
+
+The saved model is in the repository, so the app runs straight away:
+
+```bash
+streamlit run app/app.py
+```
+
+To rebuild everything from the raw data:
+
+```bash
 python src/download_data.py
 python src/build_database.py
 python src/run_analysis.py
 python src/train_model.py
+python -m pytest
 ```
 
-## Progress
+## Deployment
 
-- [x] Step 1 - project setup
-- [x] Step 2 - data download and exploration ([notebook](notebooks/01_data_exploration.ipynb), [data dictionary](docs/data_dictionary.md))
-- [x] Step 3 - database schema and load ([schema](sql/01_schema.sql), [build script](src/build_database.py))
-- [x] Step 4 - feature engineering in SQL ([views](sql/02_views.sql))
-- [x] Step 5 - analysis queries ([queries](sql/03_analysis.sql), [results](docs/analysis_results.md))
-- [x] Step 6 - model training ([script](src/train_model.py), [model details](models/model_info.json))
-- [x] Step 7 - Streamlit app ([app](app/app.py), [tests](tests/))
-- [x] Step 8 - prediction logging ([table](sql/04_user_predictions.sql), [logging code](app/prediction_log.py))
-- [ ] Step 9 - deployment
+The app is set up for [Streamlit Community Cloud](https://streamlit.io/cloud):
+
+- **Main file:** `app/app.py`
+- **Python version:** 3.14, set under "Advanced settings" when deploying.
+- **Dependencies:** `requirements.txt` holds only what the app needs, with pinned versions,
+  so the hosted app loads the model with the same scikit-learn version that saved it.
+- **Database:** add the PostgreSQL connection string as a secret named `DATABASE_URL`.
+  Without it the app still runs, and saves predictions to a temporary file.
+
+## Repository layout
+
+| Path | Contents |
+|---|---|
+| [`sql/`](sql/) | Schema, feature views, analysis queries and the logging table |
+| [`src/`](src/) | Scripts that download the data, build the database, run the analysis and train the model |
+| [`app/`](app/) | Streamlit app, prediction logic and prediction logging |
+| [`models/`](models/) | Saved model pipeline and its metrics |
+| [`notebooks/`](notebooks/) | Data exploration notebook |
+| [`docs/`](docs/) | Data dictionary, analysis results and model figures |
+| [`tests/`](tests/) | Automated tests |
+| `data/` | Raw CSV and SQLite database (rebuilt by the scripts, not committed) |
+
+## Data source
+
+CDC Diabetes Health Indicators, from the
+[UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/891/cdc+diabetes+health+indicators),
+derived from the CDC's Behavioral Risk Factor Surveillance System 2015 survey.
+Column definitions are in the [data dictionary](docs/data_dictionary.md).
