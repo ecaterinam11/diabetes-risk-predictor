@@ -82,6 +82,33 @@ erDiagram
 each table holds 253,680 rows, there are no foreign key violations, and joining the
 three tables back together reproduces every value in the original CSV.
 
+## Feature engineering in SQL
+
+[`sql/02_views.sql`](sql/02_views.sql) builds the model's features inside the database
+rather than in Python:
+
+| View | Purpose |
+|---|---|
+| `v_patient_profile` | One readable row per patient, with codes replaced by labels |
+| `v_engineered_features` | New features built with `CASE WHEN` and arithmetic |
+| `v_summary_by_age_band` | Summary statistics for four life-stage age bands |
+| `training_features` | The single view the model reads from (`SELECT * FROM training_features`) |
+
+Engineered features: WHO BMI category, life-stage age band, income band, college
+graduate flag, frequent physical and mental distress (14 or more unhealthy days in 30),
+a count of cardiovascular conditions (0-4) and a count of healthy habits (0-5).
+
+The diabetes rate rises steadily with the number of cardiovascular conditions
+(high blood pressure, high cholesterol, heart disease, stroke):
+
+| Conditions | Patients | Diabetes rate |
+|---|---|---|
+| 0 | 97,968 | 3.7% |
+| 1 | 81,002 | 12.2% |
+| 2 | 57,010 | 26.5% |
+| 3 | 15,217 | 36.4% |
+| 4 | 2,483 | 47.4% |
+
 ## Repository layout
 
 | Folder       | Contents                                                   |
@@ -109,7 +136,7 @@ python src/build_database.py
 - [x] Step 1 - project setup
 - [x] Step 2 - data download and exploration ([notebook](notebooks/01_data_exploration.ipynb), [data dictionary](docs/data_dictionary.md))
 - [x] Step 3 - database schema and load ([schema](sql/01_schema.sql), [build script](src/build_database.py))
-- [ ] Step 4 - feature engineering in SQL
+- [x] Step 4 - feature engineering in SQL ([views](sql/02_views.sql))
 - [ ] Step 5 - analysis queries
 - [ ] Step 6 - model training
 - [ ] Step 7 - Streamlit app

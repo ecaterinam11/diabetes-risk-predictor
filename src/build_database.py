@@ -8,6 +8,7 @@ Steps:
     2. Split the flat CSV into patients, lifestyle_factors and clinical_metrics
     3. Validate: row counts, foreign keys, and that joining the three tables
        back together reproduces the original CSV exactly
+    4. Create the feature engineering views from sql/02_views.sql and check them
 
 The database is written to data/diabetes.db, which is not committed to Git.
 It is rebuilt from scratch on every run.
@@ -22,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CSV_PATH = ROOT / "data" / "raw" / "cdc_diabetes_health_indicators.csv"
 DB_PATH = ROOT / "data" / "diabetes.db"
 SCHEMA_PATH = ROOT / "sql" / "01_schema.sql"
+VIEWS_PATH = ROOT / "sql" / "02_views.sql"
 
 # CSV column -> database column, grouped by destination table
 PATIENTS = {
@@ -100,10 +102,10 @@ def make_engine():
     return engine
 
 
-def create_schema(engine) -> None:
+def run_sql_file(engine, path: Path) -> None:
     raw = engine.raw_connection()
     try:
-        raw.executescript(SCHEMA_PATH.read_text(encoding="utf-8"))
+        raw.executescript(path.read_text(encoding="utf-8"))
         raw.commit()
     finally:
         raw.close()
@@ -144,6 +146,19 @@ def validate(engine, df: pd.DataFrame) -> None:
     print(f"  round trip OK     3-table join reproduces all {original.size:,} CSV values")
 
 
+def validate_views(engine, expected_rows: int) -> None:
+    with engine.connect() as conn:
+        features = pd.read_sql(text("SELECT * FROM training_features"), conn)
+        summary = pd.read_sql(text("SELECT * FROM v_summary_by_age_band"), conn)
+
+    assert len(features) == expected_rows, f"training_features has {len(features):,} rows"
+    assert features["patient_id"].is_unique, "training_features repeats a patient"
+    assert not features.isna().any().any(), "training_features contains NULLs"
+    assert summary["patients"].sum() == expected_rows, "age bands do not cover every patient"
+    print(f"  training_features OK   {len(features):,} rows x {features.shape[1]} columns, no NULLs")
+    print(f"  age band summary OK    {len(summary)} bands cover every patient")
+
+
 def main() -> None:
     if not CSV_PATH.exists():
         raise SystemExit("Raw CSV not found. Run: python src/download_data.py")
@@ -154,11 +169,15 @@ def main() -> None:
 
     engine = make_engine()
     print("Creating schema ...")
-    create_schema(engine)
+    run_sql_file(engine, SCHEMA_PATH)
     print("Loading tables ...")
     load_tables(engine, df)
-    print("Validating ...")
+    print("Validating tables ...")
     validate(engine, df)
+    print("Creating views ...")
+    run_sql_file(engine, VIEWS_PATH)
+    print("Validating views ...")
+    validate_views(engine, len(df))
     engine.dispose()
     print(f"Done: {DB_PATH.relative_to(ROOT)} ({DB_PATH.stat().st_size / 1e6:.1f} MB)")
 
