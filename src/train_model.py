@@ -49,17 +49,20 @@ TARGET = "has_diabetes"
 BMI_CAP = 50  # BMI above this is treated as 50: the few extreme values distort a linear model
 
 # --- Feature sets -------------------------------------------------------------
-# The web app asks only health and lifestyle questions (16 inputs).
+# The web app asks only health and lifestyle questions (15 inputs).
 APP_BINARY = [
     "is_male", "is_smoker", "is_physically_active", "eats_fruit_daily", "eats_veg_daily",
-    "is_heavy_drinker", "has_high_bp", "has_high_chol", "had_stroke", "has_heart_disease",
+    "has_high_bp", "has_high_chol", "had_stroke", "has_heart_disease",
     "has_difficulty_walking",
 ]
 APP_NUMERIC = ["general_health", "poor_mental_days", "poor_physical_days"]
 APP_FEATURES = APP_BINARY + APP_NUMERIC + ["bmi", "age_group_id"]
 
-# The five columns left out of the app model: income, education and access to care.
-EXTRA_BINARY = ["has_healthcare", "skipped_doctor_cost", "had_chol_check"]
+# The six columns left out of the app model: income, education, access to care and
+# heavy drinking. Heavy drinkers report less diabetes in this survey (most likely
+# because people who are diagnosed are told to cut down), so a model that uses it
+# would lower the risk it shows to heavy drinkers.
+EXTRA_BINARY = ["has_healthcare", "skipped_doctor_cost", "had_chol_check", "is_heavy_drinker"]
 EXTRA_NUMERIC = ["education_id", "income_id"]
 ALL_FEATURES = APP_FEATURES + EXTRA_BINARY + EXTRA_NUMERIC
 
@@ -75,7 +78,6 @@ LABELS = {
     "is_physically_active": "Physically active",
     "eats_fruit_daily": "Eats fruit daily",
     "eats_veg_daily": "Eats vegetables daily",
-    "is_heavy_drinker": "Heavy drinker",
     "has_high_bp": "High blood pressure",
     "has_high_chol": "High cholesterol",
     "had_stroke": "Had a stroke",

@@ -8,7 +8,6 @@
     "is_physically_active",
     "eats_fruit_daily",
     "eats_veg_daily",
-    "is_heavy_drinker",
     "has_high_bp",
     "has_high_chol",
     "had_stroke",
@@ -26,7 +25,6 @@
     "is_physically_active",
     "eats_fruit_daily",
     "eats_veg_daily",
-    "is_heavy_drinker",
     "has_high_bp",
     "has_high_chol",
     "had_stroke",
@@ -44,7 +42,6 @@
     0.756992,
     0.634426,
     0.811426,
-    0.05573,
     0.428995,
     0.424304,
     0.040405,
@@ -91,15 +88,15 @@
   "training_rows": 202944,
   "test_rows": 50736,
   "base_rate": 0.1393,
-  "cv_roc_auc_mean": 0.8236,
-  "cv_roc_auc_std": 0.0016,
+  "cv_roc_auc_mean": 0.822,
+  "cv_roc_auc_std": 0.0014,
   "test_metrics": {
     "Logistic regression (app model)": {
-      "roc_auc": 0.8193,
-      "pr_auc": 0.4077,
-      "brier": 0.0992,
+      "roc_auc": 0.8179,
+      "pr_auc": 0.4058,
+      "brier": 0.0994,
       "mean_prediction": 0.1399,
-      "features": 16
+      "features": 15
     },
     "Logistic regression, all 21 features": {
       "roc_auc": 0.8224,
@@ -109,15 +106,15 @@
       "features": 21
     },
     "Logistic regression, balanced class weights": {
-      "roc_auc": 0.8196,
-      "pr_auc": 0.4066,
-      "brier": 0.1774,
-      "mean_prediction": 0.3853,
-      "features": 16
+      "roc_auc": 0.8182,
+      "pr_auc": 0.4049,
+      "brier": 0.1782,
+      "mean_prediction": 0.3866,
+      "features": 15
     },
     "XGBoost": {
-      "roc_auc": 0.8279,
-      "pr_auc": 0.4246,
+      "roc_auc": 0.8276,
+      "pr_auc": 0.4241,
       "brier": 0.0973,
       "mean_prediction": 0.1394,
       "features": 21
@@ -126,37 +123,37 @@
   "risk_band_results": [
     {
       "band": "Low",
-      "people": 28578,
-      "share_of_people_pct": 56.3,
-      "actual_diabetes_pct": 3.7,
-      "avg_predicted_pct": 3.9,
-      "share_of_all_cases_pct": 15.0
+      "people": 28474,
+      "share_of_people_pct": 56.1,
+      "actual_diabetes_pct": 3.8,
+      "avg_predicted_pct": 4.0,
+      "share_of_all_cases_pct": 15.1
     },
     {
       "band": "Moderate",
-      "people": 12574,
-      "share_of_people_pct": 24.8,
-      "actual_diabetes_pct": 17.9,
+      "people": 12738,
+      "share_of_people_pct": 25.1,
+      "actual_diabetes_pct": 17.8,
       "avg_predicted_pct": 16.2,
-      "share_of_all_cases_pct": 31.8
+      "share_of_all_cases_pct": 32.1
     },
     {
       "band": "High",
-      "people": 9584,
-      "share_of_people_pct": 18.9,
+      "people": 9524,
+      "share_of_people_pct": 18.8,
       "actual_diabetes_pct": 39.2,
-      "avg_predicted_pct": 41.0,
-      "share_of_all_cases_pct": 53.2
+      "avg_predicted_pct": 40.9,
+      "share_of_all_cases_pct": 52.8
     }
   ],
   "odds_ratios": [
     {
       "factor": "Male (vs female)",
-      "odds_ratio": 1.23
+      "odds_ratio": 1.21
     },
     {
       "factor": "Smoker",
-      "odds_ratio": 0.99
+      "odds_ratio": 0.97
     },
     {
       "factor": "Physically active",
@@ -164,35 +161,31 @@
     },
     {
       "factor": "Eats fruit daily",
-      "odds_ratio": 0.95
+      "odds_ratio": 0.96
     },
     {
       "factor": "Eats vegetables daily",
-      "odds_ratio": 0.95
-    },
-    {
-      "factor": "Heavy drinker",
-      "odds_ratio": 0.44
+      "odds_ratio": 0.94
     },
     {
       "factor": "High blood pressure",
-      "odds_ratio": 2.07
+      "odds_ratio": 2.05
     },
     {
       "factor": "High cholesterol",
-      "odds_ratio": 1.73
+      "odds_ratio": 1.74
     },
     {
       "factor": "Had a stroke",
-      "odds_ratio": 1.22
+      "odds_ratio": 1.2
     },
     {
       "factor": "Heart disease",
-      "odds_ratio": 1.29
+      "odds_ratio": 1.31
     },
     {
       "factor": "Difficulty walking",
-      "odds_ratio": 1.16
+      "odds_ratio": 1.17
     },
     {
       "factor": "General health, per step worse",
@@ -208,55 +201,55 @@
     },
     {
       "factor": "BMI, per 5 points",
-      "odds_ratio": 1.46
+      "odds_ratio": 1.47
     },
     {
       "factor": "Age 25-29 (vs 18-24)",
-      "odds_ratio": 0.85
+      "odds_ratio": 0.75
     },
     {
       "factor": "Age 30-34 (vs 18-24)",
-      "odds_ratio": 1.04
+      "odds_ratio": 0.89
     },
     {
       "factor": "Age 35-39 (vs 18-24)",
-      "odds_ratio": 1.4
+      "odds_ratio": 1.25
     },
     {
       "factor": "Age 40-44 (vs 18-24)",
-      "odds_ratio": 1.97
+      "odds_ratio": 1.77
     },
     {
       "factor": "Age 45-49 (vs 18-24)",
-      "odds_ratio": 2.37
+      "odds_ratio": 2.13
     },
     {
       "factor": "Age 50-54 (vs 18-24)",
-      "odds_ratio": 2.98
+      "odds_ratio": 2.69
     },
     {
       "factor": "Age 55-59 (vs 18-24)",
-      "odds_ratio": 3.32
+      "odds_ratio": 3.0
     },
     {
       "factor": "Age 60-64 (vs 18-24)",
-      "odds_ratio": 4.14
+      "odds_ratio": 3.74
     },
     {
       "factor": "Age 65-69 (vs 18-24)",
-      "odds_ratio": 5.01
+      "odds_ratio": 4.56
     },
     {
       "factor": "Age 70-74 (vs 18-24)",
-      "odds_ratio": 5.5
+      "odds_ratio": 5.01
     },
     {
       "factor": "Age 75-79 (vs 18-24)",
-      "odds_ratio": 5.15
+      "odds_ratio": 4.66
     },
     {
       "factor": "Age 80+ (vs 18-24)",
-      "odds_ratio": 4.39
+      "odds_ratio": 4.06
     }
   ]
 }

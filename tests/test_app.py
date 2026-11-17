@@ -6,7 +6,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 APP = str(Path(__file__).resolve().parents[1] / "app" / "app.py")
-YES_NO_KEYS = ["high_bp", "high_chol", "heart", "stroke", "walking", "active", "fruit", "veg", "smoker", "drinker"]
+YES_NO_KEYS = ["high_bp", "high_chol", "heart", "stroke", "walking", "active", "fruit", "veg", "smoker"]
 
 
 @pytest.fixture

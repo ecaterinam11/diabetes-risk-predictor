@@ -78,16 +78,12 @@ def input_form() -> dict | None:
             veg = yes_no("Vegetables at least once a day?", "veg")
         with col2:
             smoker = yes_no("Smoked 100+ cigarettes in your life?", "smoker", "That is about 5 packs in total.")
-            drinker = yes_no(
-                "Heavy drinker?", "drinker",
-                "More than 14 drinks a week for men, or more than 7 for women.",
-            )
 
         submitted = st.form_submit_button("Estimate my risk", type="primary", width="stretch")
 
     if not submitted:
         return None
-    yes_no_answers = [high_bp, high_chol, heart, stroke, walking, active, fruit, veg, smoker, drinker]
+    yes_no_answers = [high_bp, high_chol, heart, stroke, walking, active, fruit, veg, smoker]
     missing = sum(a is None for a in yes_no_answers) + (sex is None)
     if missing:
         st.error(f"Please answer every question. {missing} still need{'s' if missing == 1 else ''} an answer.")
@@ -109,7 +105,6 @@ def input_form() -> dict | None:
         "eats_fruit_daily": fruit,
         "eats_veg_daily": veg,
         "is_smoker": smoker,
-        "is_heavy_drinker": drinker,
     }
 
 
@@ -176,12 +171,6 @@ def show_result(answers: dict, pipeline, info: dict) -> None:
         )[["factor", "direction", "odds_multiplier"]]
         st.dataframe(table, hide_index=True, width="stretch")
 
-    if answers["is_heavy_drinker"]:
-        st.warning(
-            "The model lowers the estimate for heavy drinkers. This is a quirk of the survey data, "
-            "most likely because people diagnosed with diabetes are told to cut down. "
-            "Alcohol does not protect against diabetes."
-        )
     if answers["age"] >= 80:
         st.caption("Everyone aged 80 and over is treated as one group, because that is how the survey recorded age.")
     if bmi > info["bmi_cap"]:
@@ -226,6 +215,9 @@ def about_tab(info: dict) -> None:
         "Most adult cases are type 2.\n"
         "- The model finds **associations, not causes**. Changing an answer changes the estimate, "
         "but that does not mean changing the behaviour would change your risk by the same amount.\n"
+        "- Alcohol is deliberately left out. Heavy drinkers in the survey reported *less* diabetes, "
+        "most likely because people who are diagnosed are told to cut down, so including it would "
+        "have lowered the risk shown to heavy drinkers.\n"
         "- It knows nothing about family history, ethnicity, blood sugar or medication, "
         "which doctors use to assess risk."
     )
@@ -241,7 +233,7 @@ def main() -> None:
         "portfolio. It is not a diagnosis and is no substitute for seeing a health professional.",
         icon="⚠️",
     )
-    st.write("Answer 16 questions to see how your risk compares with 250,000 survey respondents.")
+    st.write("Answer a few questions to see how your risk compares with 250,000 survey respondents.")
 
     estimate, about = st.tabs(["Estimate my risk", "About the model"])
     with estimate:

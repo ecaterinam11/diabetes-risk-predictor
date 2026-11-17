@@ -16,7 +16,7 @@ from risk_model import age_to_group, bmi_category, bmi_from, load_model, predict
 
 HEALTHY = dict(
     is_male=0, is_smoker=0, is_physically_active=1, eats_fruit_daily=1, eats_veg_daily=1,
-    is_heavy_drinker=0, has_high_bp=0, has_high_chol=0, had_stroke=0, has_heart_disease=0,
+    has_high_bp=0, has_high_chol=0, had_stroke=0, has_heart_disease=0,
     has_difficulty_walking=0, general_health=2, poor_mental_days=0, poor_physical_days=0,
     bmi=22.0, age_group_id=2,
 )
@@ -73,6 +73,12 @@ def test_contributions_add_up_to_the_prediction(model):
         result = predict(pipeline, info, person)
         log_odds = baseline_log_odds + result.contributions["log_odds"].sum()
         assert 1 / (1 + np.exp(-log_odds)) == pytest.approx(result.probability, abs=1e-4)
+
+
+def test_alcohol_is_not_a_model_input(model):
+    """Heavy drinking is left out on purpose: see the note in src/train_model.py."""
+    _, info = model
+    assert "is_heavy_drinker" not in info["features"]
 
 
 def test_bmi_is_capped(model):

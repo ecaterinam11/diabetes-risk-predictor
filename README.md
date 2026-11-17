@@ -146,24 +146,30 @@ holds out 20% of patients as a test set, and compares four models.
 
 | Model | Inputs | ROC-AUC | PR-AUC | Brier score | Average predicted risk |
 |---|---|---|---|---|---|
-| **Logistic regression (used in the app)** | 16 | 0.819 | 0.408 | 0.099 | 14.0% |
+| **Logistic regression (used in the app)** | 15 | 0.818 | 0.406 | 0.099 | 14.0% |
 | Logistic regression, all features | 21 | 0.822 | 0.411 | 0.099 | 14.0% |
-| Logistic regression, balanced class weights | 16 | 0.820 | 0.407 | 0.177 | 38.5% |
-| XGBoost | 21 | 0.828 | 0.425 | 0.097 | 13.9% |
+| Logistic regression, balanced class weights | 15 | 0.818 | 0.405 | 0.178 | 38.7% |
+| XGBoost | 21 | 0.828 | 0.424 | 0.097 | 13.9% |
 
 The actual diabetes rate in the test set is 13.9%. Five-fold cross-validation on the
-training set gives a ROC-AUC of 0.824 (standard deviation 0.002).
+training set gives a ROC-AUC of 0.822 (standard deviation 0.001).
 
-**Why logistic regression.** XGBoost is better by under 0.01 ROC-AUC. That is too small
+**Why logistic regression.** XGBoost is better by about 0.01 ROC-AUC. That is too small
 a gain to give up coefficients that can be read as odds ratios and shown to the user.
 
-**Why 16 inputs.** The app model leaves out income, education and three access-to-care
-questions. Adding them improves ROC-AUC by 0.003, which does not justify asking people
-for their income in a health tool.
+**Why 15 inputs.** The app model leaves out six of the 21 survey columns. Adding them all
+back improves ROC-AUC by under 0.005.
+
+- *Income, education and three access-to-care questions* are left out because a health
+  tool should not need to ask for someone's income.
+- *Heavy drinking* is left out because it misleads. Heavy drinkers in the survey report
+  less diabetes (5.8% against 14.4%), most likely because people who are diagnosed are told
+  to cut down. A model that used it gave heavy drinkers an odds ratio of 0.44, which more
+  than halved the risk it showed them.
 
 **Why no class weighting.** Only 13.9% of patients have diabetes. Balancing the classes
-leaves the ranking unchanged (ROC-AUC 0.820) but makes the model predict an average risk
-of 38.5%, almost three times the truth. The app shows people a probability, so the
+leaves the ranking unchanged (ROC-AUC 0.818) but makes the model predict an average risk
+of 38.7%, almost three times the truth. The app shows people a probability, so the
 probability has to be honest.
 
 ![ROC and precision-recall curves](docs/figures/roc_pr_curves.png)
@@ -176,13 +182,13 @@ The app turns the predicted probability into three levels. On the test set:
 
 | Level | Predicted risk | Share of people | Actual diabetes rate | Share of all cases |
 |---|---|---|---|---|
-| Low | Under 10% | 56.3% | 3.7% | 15.0% |
-| Moderate | 10% to 25% | 24.8% | 17.9% | 31.8% |
-| High | 25% or more | 18.9% | 39.2% | 53.2% |
+| Low | Under 10% | 56.1% | 3.8% | 15.1% |
+| Moderate | 10% to 25% | 25.1% | 17.8% | 32.1% |
+| High | 25% or more | 18.8% | 39.2% | 52.8% |
 
 ### Odds ratios
 
-Each value is the effect of one factor with the other fifteen held constant.
+Each value is the effect of one factor with the other fourteen held constant.
 
 ![Odds ratios](docs/figures/odds_ratios.png)
 
@@ -190,13 +196,12 @@ These are smaller than the single-factor odds ratios in the SQL analysis. High b
 pressure falls from 5.0 on its own to 2.1 in the model, because people with high blood
 pressure also tend to be older and heavier, and the model credits those separately.
 
-Two results should not be read as advice. Heavy drinking has an odds ratio of 0.44, a
-known quirk of this survey: people diagnosed with diabetes are often told to stop
-drinking. Smoking and diet have almost no effect once the other factors are accounted for.
+Smoking and diet have almost no effect once the other factors are accounted for. That
+describes this survey and should not be read as advice.
 
 ## Web app
 
-[`app/app.py`](app/app.py) is a Streamlit app. It asks 16 questions and returns:
+[`app/app.py`](app/app.py) is a Streamlit app. It asks 15 questions and returns:
 
 - a risk level (low, moderate or high) and the estimated probability
 - a chart of which answers raise or lower that person's estimate, compared with the

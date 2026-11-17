@@ -22,7 +22,6 @@ BINARY_LABELS = {
     "is_physically_active": ("Being physically active", "Not being physically active"),
     "eats_fruit_daily": ("Eating fruit daily", "Not eating fruit daily"),
     "eats_veg_daily": ("Eating vegetables daily", "Not eating vegetables daily"),
-    "is_heavy_drinker": ("Heavy drinking", "Not drinking heavily"),
     "has_high_bp": ("High blood pressure", "No high blood pressure"),
     "has_high_chol": ("High cholesterol", "No high cholesterol"),
     "had_stroke": ("A previous stroke", "No previous stroke"),
