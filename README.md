@@ -19,7 +19,7 @@ health and lifestyle information, built on a SQL data layer.
 
 The raw data is one flat CSV. [`sql/01_schema.sql`](sql/01_schema.sql) splits it into
 three tables linked by `patient_id`, plus three lookup tables that turn the survey's
-coded answers into readable labels. Every column has a `CHECK` constraint.
+coded answers into readable labels. Yes/no and numeric columns have `CHECK` constraints on their allowed values.
 
 ```mermaid
 erDiagram
