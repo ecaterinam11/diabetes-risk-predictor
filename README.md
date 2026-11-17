@@ -31,16 +31,16 @@ Three decisions shaped the project:
 ## Architecture
 
 ```mermaid
-flowchart LR
-    csv[CDC survey CSV] --> load[build_database.py]
-    load --> db[(SQLite<br>6 tables)]
-    db --> views[SQL views<br>training_features]
-    db --> analysis[SQL analysis<br>8 queries]
-    views --> train[train_model.py]
-    train --> model[pipeline.joblib]
-    model --> app[Streamlit app]
-    app -->|opt-in INSERT| pg[(PostgreSQL<br>user_predictions)]
-    pg -->|GROUP BY| app
+flowchart TD
+    csv["CDC survey CSV"] --> load["build_database.py"]
+    load --> db[("SQLite: 6 tables")]
+    db --> views["SQL views: training_features"]
+    db --> analysis["SQL analysis: 8 queries"]
+    views --> train["train_model.py"]
+    train --> model["pipeline.joblib"]
+    model --> app["Streamlit app"]
+    app -- "opt-in INSERT" --> pg[("PostgreSQL: user_predictions")]
+    pg -- "GROUP BY totals" --> app
 ```
 
 1. **Load.** The raw CSV is split into normalised tables and validated against the original.
