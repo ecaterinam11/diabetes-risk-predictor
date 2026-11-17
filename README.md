@@ -194,6 +194,24 @@ Two results should not be read as advice. Heavy drinking has an odds ratio of 0.
 known quirk of this survey: people diagnosed with diabetes are often told to stop
 drinking. Smoking and diet have almost no effect once the other factors are accounted for.
 
+## Web app
+
+[`app/app.py`](app/app.py) is a Streamlit app. It asks 16 questions and returns:
+
+- a risk level (low, moderate or high) and the estimated probability
+- a chart of which answers raise or lower that person's estimate, compared with the
+  average survey respondent
+- an "About the model" tab with the accuracy figures, odds ratios and limitations
+
+No answer is pre-selected for the yes/no questions, so the app never assumes one. The
+prediction logic lives in [`app/risk_model.py`](app/risk_model.py), separate from the
+interface, and is covered by tests.
+
+```bash
+streamlit run app/app.py
+python -m pytest
+```
+
 ## Repository layout
 
 | Folder       | Contents                                                   |
@@ -205,6 +223,7 @@ drinking. Smoking and diet have almost no effect once the other factors are acco
 | `src/`       | Python scripts: load the database, train the model         |
 | `models/`    | Saved model pipeline (`.joblib`) and its metrics           |
 | `app/`       | Streamlit web app                                          |
+| `tests/`     | Tests for the prediction logic and the app                 |
 
 ## Setup
 
@@ -226,6 +245,6 @@ python src/train_model.py
 - [x] Step 4 - feature engineering in SQL ([views](sql/02_views.sql))
 - [x] Step 5 - analysis queries ([queries](sql/03_analysis.sql), [results](docs/analysis_results.md))
 - [x] Step 6 - model training ([script](src/train_model.py), [model details](models/model_info.json))
-- [ ] Step 7 - Streamlit app
+- [x] Step 7 - Streamlit app ([app](app/app.py), [tests](tests/))
 - [ ] Step 8 - prediction logging
 - [ ] Step 9 - deployment

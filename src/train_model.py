@@ -305,12 +305,19 @@ def main() -> None:
     plot_calibration(y_test, probs)
     plot_odds_ratios(ratios)
 
+    # The average of each transformed feature in the training set. The app uses it
+    # to explain a prediction as "your answers compared with the average respondent".
+    baseline = fitted[chosen].named_steps["prep"].transform(X_train[APP_FEATURES]).mean(axis=0)
+
     joblib.dump(fitted[chosen], MODEL_DIR / "pipeline.joblib")
     info = {
         "trained_on": date.today().isoformat(),
         "model": "Logistic regression",
         "scikit_learn_version": sklearn.__version__,
         "features": APP_FEATURES,
+        "binary_features": APP_BINARY,
+        "numeric_features": APP_NUMERIC,
+        "feature_baseline": [round(float(v), 6) for v in np.asarray(baseline).ravel()],
         "bmi_cap": BMI_CAP,
         "age_groups": {str(k): v for k, v in age_labels.items()},
         "risk_bands": RISK_BANDS,
