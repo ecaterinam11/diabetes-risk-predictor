@@ -1,4 +1,4 @@
-﻿# Type 2 Diabetes Risk Predictor
+# Type 2 Diabetes Risk Predictor
 
 A web app that estimates a person's risk of type 2 diabetes from self-reported
 health and lifestyle information, built on a SQL data layer.
