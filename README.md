@@ -20,6 +20,7 @@ health and lifestyle information, built on a SQL data layer.
 | Folder       | Contents                                                   |
 |--------------|------------------------------------------------------------|
 | `data/`      | Raw CSV and the SQLite database (not committed)            |
+| `docs/`      | Data dictionary                                            |
 | `sql/`       | Schema, feature-engineering views and analysis queries     |
 | `notebooks/` | Exploration and model evaluation notebooks                 |
 | `src/`       | Python scripts: load the database, train the model         |
@@ -32,4 +33,17 @@ health and lifestyle information, built on a SQL data layer.
 py -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+python src/download_data.py
 ```
+
+## Progress
+
+- [x] Step 1 - project setup
+- [x] Step 2 - data download and exploration ([notebook](notebooks/01_data_exploration.ipynb), [data dictionary](docs/data_dictionary.md))
+- [ ] Step 3 - database schema and load
+- [ ] Step 4 - feature engineering in SQL
+- [ ] Step 5 - analysis queries
+- [ ] Step 6 - model training
+- [ ] Step 7 - Streamlit app
+- [ ] Step 8 - prediction logging
+- [ ] Step 9 - deployment
