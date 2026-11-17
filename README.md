@@ -1,4 +1,4 @@
-# Type 2 Diabetes Risk Predictor
+﻿# Type 2 Diabetes Risk Predictor
 
 A web app that estimates a person's risk of type 2 diabetes from self-reported
 health and lifestyle information, built on a SQL data layer.
@@ -139,16 +139,71 @@ Key findings:
 
 These are associations in survey data, not causes.
 
+## Model
+
+[`src/train_model.py`](src/train_model.py) reads `training_features` from the database,
+holds out 20% of patients as a test set, and compares four models.
+
+| Model | Inputs | ROC-AUC | PR-AUC | Brier score | Average predicted risk |
+|---|---|---|---|---|---|
+| **Logistic regression (used in the app)** | 16 | 0.819 | 0.408 | 0.099 | 14.0% |
+| Logistic regression, all features | 21 | 0.822 | 0.411 | 0.099 | 14.0% |
+| Logistic regression, balanced class weights | 16 | 0.820 | 0.407 | 0.177 | 38.5% |
+| XGBoost | 21 | 0.828 | 0.425 | 0.097 | 13.9% |
+
+The actual diabetes rate in the test set is 13.9%. Five-fold cross-validation on the
+training set gives a ROC-AUC of 0.824 (standard deviation 0.002).
+
+**Why logistic regression.** XGBoost is better by under 0.01 ROC-AUC. That is too small
+a gain to give up coefficients that can be read as odds ratios and shown to the user.
+
+**Why 16 inputs.** The app model leaves out income, education and three access-to-care
+questions. Adding them improves ROC-AUC by 0.003, which does not justify asking people
+for their income in a health tool.
+
+**Why no class weighting.** Only 13.9% of patients have diabetes. Balancing the classes
+leaves the ranking unchanged (ROC-AUC 0.820) but makes the model predict an average risk
+of 38.5%, almost three times the truth. The app shows people a probability, so the
+probability has to be honest.
+
+![ROC and precision-recall curves](docs/figures/roc_pr_curves.png)
+
+![Calibration plot](docs/figures/calibration.png)
+
+### Risk levels
+
+The app turns the predicted probability into three levels. On the test set:
+
+| Level | Predicted risk | Share of people | Actual diabetes rate | Share of all cases |
+|---|---|---|---|---|
+| Low | Under 10% | 56.3% | 3.7% | 15.0% |
+| Moderate | 10% to 25% | 24.8% | 17.9% | 31.8% |
+| High | 25% or more | 18.9% | 39.2% | 53.2% |
+
+### Odds ratios
+
+Each value is the effect of one factor with the other fifteen held constant.
+
+![Odds ratios](docs/figures/odds_ratios.png)
+
+These are smaller than the single-factor odds ratios in the SQL analysis. High blood
+pressure falls from 5.0 on its own to 2.1 in the model, because people with high blood
+pressure also tend to be older and heavier, and the model credits those separately.
+
+Two results should not be read as advice. Heavy drinking has an odds ratio of 0.44, a
+known quirk of this survey: people diagnosed with diabetes are often told to stop
+drinking. Smoking and diet have almost no effect once the other factors are accounted for.
+
 ## Repository layout
 
 | Folder       | Contents                                                   |
 |--------------|------------------------------------------------------------|
 | `data/`      | Raw CSV and the SQLite database (not committed)            |
-| `docs/`      | Data dictionary and analysis results                       |
+| `docs/`      | Data dictionary, analysis results and model figures        |
 | `sql/`       | Schema, feature-engineering views and analysis queries     |
-| `notebooks/` | Exploration and model evaluation notebooks                 |
+| `notebooks/` | Data exploration notebook                                  |
 | `src/`       | Python scripts: load the database, train the model         |
-| `models/`    | Saved model pipeline (`.joblib`)                           |
+| `models/`    | Saved model pipeline (`.joblib`) and its metrics           |
 | `app/`       | Streamlit web app                                          |
 
 ## Setup
@@ -160,6 +215,7 @@ pip install -r requirements.txt
 python src/download_data.py
 python src/build_database.py
 python src/run_analysis.py
+python src/train_model.py
 ```
 
 ## Progress
@@ -169,7 +225,7 @@ python src/run_analysis.py
 - [x] Step 3 - database schema and load ([schema](sql/01_schema.sql), [build script](src/build_database.py))
 - [x] Step 4 - feature engineering in SQL ([views](sql/02_views.sql))
 - [x] Step 5 - analysis queries ([queries](sql/03_analysis.sql), [results](docs/analysis_results.md))
-- [ ] Step 6 - model training
+- [x] Step 6 - model training ([script](src/train_model.py), [model details](models/model_info.json))
 - [ ] Step 7 - Streamlit app
 - [ ] Step 8 - prediction logging
 - [ ] Step 9 - deployment
